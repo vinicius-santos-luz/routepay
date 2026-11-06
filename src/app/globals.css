@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #142a2b;
+  --color-muted: #5c6b68;
+  --color-emerald: #22634d;
+  --color-accent: #c5ed9d;
+  --color-paper: #f7f8f2;
+  --color-line: #dde3d9;
+  --font-sans: "Inter", "Segoe UI", Arial, Helvetica, sans-serif;
+}
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-accent);
+  color: var(--color-ink);
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-emerald);
+  outline-offset: 5px;
+}
+
+.skip-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 50;
+  transform: translateY(-200%);
+  border-radius: 8px;
+  padding: 12px 20px;
+  background: var(--color-ink);
+  color: white;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+.eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.button-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  border-radius: 10px;
+  background: var(--color-ink);
+  padding: 14px 20px;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background-color 150ms;
+}
+
+.button-primary:hover {
+  background: var(--color-emerald);
+}
+
+.route-grid {
+  background-image: radial-gradient(#42605a 1px, transparent 1px);
+  background-size: 23px 23px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
