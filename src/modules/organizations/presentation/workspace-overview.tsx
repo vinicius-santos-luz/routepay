@@ -1,10 +1,11 @@
 import { Icon, type IconName } from "@/components/ui/icon";
+import Link from "next/link";
 
 const areas: { title: string; icon: IconName; text: string }[] = [
   {
     title: "Organização",
     icon: "building",
-    text: "Nenhuma organização cadastrada",
+    text: "Crie e consulte suas organizações",
   },
   {
     title: "Fornecedores",
@@ -47,11 +48,19 @@ export function WorkspaceOverview() {
                 <Icon name={icon} />
               </span>
               <span className="text-[10px] font-medium tracking-wider text-muted uppercase">
-                Em breve
+                {title === "Organização" ? "Fundação disponível" : "Em breve"}
               </span>
             </div>
             <h2 className="text-sm font-semibold">{title}</h2>
             <p className="mt-2 text-xs leading-relaxed text-muted">{text}</p>
+            {title === "Organização" && (
+              <Link
+                href="/dashboard/organizations"
+                className="mt-4 inline-block text-sm font-medium text-emerald underline underline-offset-4"
+              >
+                Acessar organizações
+              </Link>
+            )}
           </article>
         ))}
       </section>
@@ -105,8 +114,8 @@ export function WorkspaceOverview() {
                   Identidade e organizações
                 </h3>
                 <p className="mt-1 text-xs leading-relaxed text-muted">
-                  Autenticação e controle de acesso por empresa, em uma próxima
-                  etapa.
+                  Login e fundação de organizações. Administração de membros em
+                  uma próxima etapa.
                 </p>
               </div>
             </li>

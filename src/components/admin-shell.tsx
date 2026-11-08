@@ -2,9 +2,10 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { Brand } from "@/components/brand";
 import { Icon, type IconName } from "@/components/ui/icon";
+import { SignOut } from "@/modules/identity/presentation/sign-out";
+import { AdminNavigation } from "./admin-navigation";
 
 const plannedNavigation: { label: string; icon: IconName }[] = [
-  { label: "Organização", icon: "building" },
   { label: "Fornecedores", icon: "users" },
   { label: "Pagamentos", icon: "wallet" },
   { label: "Comprovantes", icon: "document" },
@@ -20,19 +21,13 @@ export function AdminShell({ children }: { children: ReactNode }) {
         </div>
         <div className="mx-5 mb-7 rounded-xl border border-line bg-paper p-3.5">
           <p className="eyebrow mb-2 text-muted">Espaço de trabalho</p>
-          <p className="text-sm font-semibold">Sua organização</p>
+          <p className="text-sm font-semibold">Suas organizações</p>
           <p className="mt-1 text-xs text-muted">
-            Cadastro disponível em breve
+            Criação e consulta de empresas
           </p>
         </div>
         <nav aria-label="Navegação administrativa" className="px-4">
-          <Link
-            href="/dashboard"
-            aria-current="page"
-            className="flex items-center gap-3 rounded-lg bg-accent/40 px-3 py-3 text-sm font-semibold text-emerald"
-          >
-            <Icon name="grid" /> Visão geral
-          </Link>
+          <AdminNavigation />
           <p className="eyebrow mt-7 mb-3 px-3 text-muted">Próximos módulos</p>
           <ul className="flex flex-wrap gap-1 lg:block">
             {plannedNavigation.map(({ label, icon }) => (
@@ -63,18 +58,22 @@ export function AdminShell({ children }: { children: ReactNode }) {
         <header className="flex flex-wrap items-center justify-between gap-4 border-b border-line bg-white/70 px-6 py-5 lg:px-10">
           <p className="text-sm text-muted">
             Plataforma <span className="mx-2 text-line">/</span>{" "}
-            <span className="font-medium text-ink">Visão geral</span>
+            <span className="font-medium text-ink">Espaço de trabalho</span>
           </p>
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-xs font-medium text-emerald"
-          >
-            Página institucional <Icon name="arrow" className="size-4" />
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 text-xs font-medium text-emerald"
+            >
+              Página institucional <Icon name="arrow" className="size-4" />
+            </Link>
+            <SignOut />
+          </div>
         </header>
         <div className="border-b border-line bg-accent/20 px-6 py-3 text-xs leading-relaxed text-emerald lg:px-10">
-          <strong>Prévia pública da interface.</strong> Sem autenticação, dados
-          empresariais ou operações financeiras.
+          <strong>Estrutura inicial da plataforma.</strong> Área autenticada;
+          criação e consulta de organizações disponíveis após a preparação
+          local. Administração de membros e operações financeiras indisponíveis.
         </div>
         <main
           id="main-content"

@@ -9,16 +9,42 @@ não foi implementada.
 
 ## Estado atual
 
-**Etapa 2 — fundação do projeto.** Monólito modular com página institucional e
-layout administrativo estático, público e sem autenticação.
+**Autenticação e primeira entrega de organizações.** Monólito modular com página
+institucional pública, dashboard protegido e Better Auth com PostgreSQL local e
+Google OAuth. Login/logout e o primeiro fluxo autenticado de organizações foram
+validados manualmente pelo responsável.
 
-| Rota         | Conteúdo                                                    |
-| ------------ | ----------------------------------------------------------- |
-| `/`          | Apresentação institucional e princípios do produto          |
-| `/dashboard` | Prévia pública do layout administrativo, com estados vazios |
+| Rota                                        | Conteúdo                                                      |
+| ------------------------------------------- | ------------------------------------------------------------- |
+| `/`                                         | Apresentação institucional pública                            |
+| `/login`                                    | Entrada com Google, desabilitada enquanto faltar configuração |
+| `/dashboard`                                | Layout administrativo; exige sessão válida no servidor        |
+| `/api/auth/[...all]`                        | Handlers GET/POST oficiais do Better Auth                     |
+| `/dashboard/organizations`                  | Criação e listagem de organizações autorizadas                |
+| `/dashboard/organizations/[organizationId]` | Dados básicos de uma organização autorizada                   |
 
-Os módulos futuros aparecem como indisponíveis. Não existem usuários, sessões,
-organizações persistidas, saldos simulados ou operações financeiras funcionais.
+Estado confirmado dos ambientes PostgreSQL **18.6** locais no WSL:
+
+| Ambiente        | Cluster            | Host/porta       | Banco          | Migrations aplicadas |
+| --------------- | ------------------ | ---------------- | -------------- | -------------------- |
+| Desenvolvimento | `18/main`          | `127.0.0.1:5432` | `routepay_dev` | `0001` e `0002`      |
+| Testes isolados | `18/routepay_test` | `127.0.0.1:5433` | `routepay_dev` | `0001` e `0002`      |
+
+No desenvolvimento, `0002_organizations.sql` foi aplicada em **08/11/2026**, com
+checksum SHA-256 `d2d720527711c52ec5ed23fbaba6876e6bf6cd822b8ee244c507f89f9bf253b0`.
+O banco possui sete tabelas, todas de propriedade de `routepay_migrator`, com RLS
+habilitada em `organizations` e `organization_memberships`. A aplicação utiliza
+somente `routepay_app`.
+
+A organização **RoutePay Desenvolvimento** foi criada pela interface como `ACTIVE`,
+com um vínculo `OWNER ACTIVE`. Listagem, persistência após atualização e página de
+detalhes funcionaram no fluxo HTTP autenticado validado manualmente. Isso não
+representa execução de uma suíte HTTP automatizada.
+
+Não há login fictício nem acesso protegido quando a configuração, o banco ou a
+sessão estão indisponíveis. Sem as tabelas empresariais, o módulo mostra
+indisponibilidade, sem dados simulados. Os módulos futuros permanecem indisponíveis;
+não há pagamentos e a aplicação não está pronta para produção.
 
 ## Stack
 
@@ -29,18 +55,21 @@ organizações persistidas, saldos simulados ou operações financeiras funciona
 - Prettier para formatação consistente.
 - Vitest 5 para testes unitários em Node.js.
 - npm com versões diretas fixadas e `package-lock.json` versionado.
+- Better Auth **1.7.18**, driver PostgreSQL `pg` **8.23.1**, sem ORM adicional.
 
-PostgreSQL/Neon, Solana, MultiHopper e Playwright fazem parte da arquitetura
-planejada, mas não estão instalados ou integrados nesta etapa.
+Neon, Solana, MultiHopper e Playwright não foram integrados. O projeto não depende
+de assinatura paga, cartão ou serviço contratado. PostgreSQL é executado localmente;
+nenhum projeto externo foi criado. Better Auth substitui Clerk e Auth.js.
 
 ## Requisitos
 
 - Node.js **24.x** (a versão principal está registrada em `.nvmrc`).
 - npm **11.x**.
 - Acesso ao registro npm para instalar as dependências.
+- PostgreSQL **18.6** local exclusivo do RoutePay, apenas para habilitar a autenticação real.
 
-Não é necessário configurar banco, carteira, RPC, conta de hospedagem ou chave de API.
-As páginas usam fontes do sistema e não dependem de download de fontes no build.
+Build, testes e página pública funcionam sem banco ou credenciais. As páginas usam
+fontes do sistema e não dependem de download de fontes no build.
 
 ## Instalação
 
@@ -55,24 +84,39 @@ O comando `nvm use` é opcional se o Node.js 24 já estiver instalado por outro 
 
 ## Ambiente
 
-A aplicação funciona sem arquivo `.env`. Para explicitar a configuração local,
-opcionalmente copie o exemplo:
+A página pública funciona sem arquivo `.env`. Para preparar a autenticação local:
 
 ```bash
 cp .env.example .env.local
 ```
 
-| Variável  | Padrão  | Valores aceitos |
-| --------- | ------- | --------------- |
-| `APP_ENV` | `local` | `local`, `test` |
+| Variável                 | Configuração                                                                   |
+| ------------------------ | ------------------------------------------------------------------------------ |
+| `APP_ENV`                | `local` (padrão) ou `test`                                                     |
+| `DATABASE_URL`           | Somente `routepay_app` em `routepay_dev` local                                 |
+| `MIGRATION_DATABASE_URL` | Somente `routepay_migrator` em `routepay_dev` local; exclusiva do processo CLI |
+| `BETTER_AUTH_URL`        | Origem local explícita; exemplo `http://localhost:3000`                        |
+| `BETTER_AUTH_SECRET`     | Segredo aleatório com pelo menos 32 caracteres, gerado localmente              |
+| `GOOGLE_CLIENT_ID`       | ID OAuth do Google, quando configurado pelo responsável                        |
+| `GOOGLE_CLIENT_SECRET`   | Segredo OAuth correspondente, somente no servidor                              |
 
-Valores vazios ou desconhecidos são rejeitados na renderização/build. `APP_ENV`
-é uma configuração da aplicação e não substitui `NODE_ENV`, gerenciado pelo Next.js.
-`npm run build` continua gerando o bundle otimizado normalmente.
+`APP_ENV` vazio ou desconhecido é rejeitado. Essa variável não substitui `NODE_ENV`,
+gerenciado pelo Next.js. As configurações sensíveis são validadas somente no uso
+da autenticação; sua ausência não impede build/testes, mas impede acesso ao painel.
+Não há valores padrão para segredo ou banco. Google é habilitado apenas com o par
+completo de variáveis e uma configuração local de autenticação válida.
 
-Nenhuma variável habilita execução financeira, rede blockchain ou banco.
 O exemplo não contém credenciais. Arquivos `.env` locais são ignorados pelo Git;
 `.env.example` permanece versionado. Nunca armazene chaves privadas ou seed phrases.
+Não reutilize banco, usuário ou credenciais de outro projeto, incluindo o Arkhe.
+
+Consulte [a configuração de autenticação](docs/architecture/authentication.md) para
+preparar PostgreSQL, identificar o alvo antes das migrations e configurar Google.
+`0001` e `0002` já estão aplicadas nos dois clusters; não editar seus arquivos nem
+reaplicá-las manualmente. Futuras evoluções exigem nova migration e revisão.
+`DATABASE_URL` não substitui `MIGRATION_DATABASE_URL`, nem o contrário. A CLI não
+carrega `.env.local`; forneça sua variável somente ao processo de migrations. Não
+coloque a credencial do migrator na configuração do Next.js ou em `NEXT_PUBLIC_*`.
 
 ## Execução local
 
@@ -81,7 +125,8 @@ npm run dev
 ```
 
 Abra [http://localhost:3000](http://localhost:3000) e
-[http://localhost:3000/dashboard](http://localhost:3000/dashboard).
+[http://localhost:3000/login](http://localhost:3000/login).
+`/dashboard` redireciona para o login quando não há sessão validada.
 
 Para verificar localmente o bundle otimizado:
 
@@ -106,22 +151,38 @@ npm run build
 `npm run typecheck` gera primeiro os tipos de rotas do Next.js para funcionar
 também em um checkout novo. `npm run test:watch` mantém o Vitest em observação.
 
-Os testes atuais verificam a configuração local padrão, os ambientes aceitos e
-a rejeição de valores não suportados. Não fazem chamadas externas nem precisam
-de credenciais. Testes de interface no navegador, integração PostgreSQL e jornadas
-Playwright serão adicionados quando os respectivos comportamentos existirem.
+Os testes verificam ambientes, alvo local, confirmação de migrations, transações e
+checksums com conexão simulada, contrato do SQL com o schema do Better Auth instalado,
+expiração e negação de sessões, origem/CSRF, senhas desabilitadas e falha do banco
+com cookie assinado nos handlers reais da biblioteca. Esses testes unitários não
+criam sessões de aplicação, não abrem conexões de banco nem chamam Google; o fluxo
+OAuth completo não é executado pela suíte.
+
+Organizações têm testes de domínio, políticas, sessão, casos de uso, repositório e
+transações simulados, fronteira da Server Action e contrato estrutural de SQL/ACLs.
+Esses testes simulados não comprovam isolamento ou concorrência reais no banco.
+Separadamente, foram aprovados **52 cenários reais de integração** no cluster
+`18/routepay_test`, porta `5433`, incluindo RLS, permissões, integridade, Unicode,
+rollback e concorrência. Consulte o [procedimento de integração](docs/testing/organizations-integration.md).
+O fluxo HTTP autenticado da primeira organização foi validado manualmente; não
+foi executada uma suíte HTTP automatizada. Consulte
+[a arquitetura de organizações](docs/architecture/organizations.md) para modelo,
+matriz, evidências e riscos remanescentes.
 
 ## Estrutura e limites dos módulos
 
 ```text
 src/
   app/                         # Rotas, layouts, estilos e metadados
-    (dashboard)/dashboard/     # /dashboard, prévia pública
+    (auth)/login/              # Entrada; sem autenticação simulada
+    (dashboard)/dashboard/     # /dashboard, sessão obrigatória no servidor
+    api/auth/[...all]/         # Handlers Better Auth
   components/                  # Componentes visuais compartilhados
     ui/
   modules/
-    identity/
+    identity/presentation/     # Cliente Better Auth, entrada Google e logout
     organizations/presentation/
+      # Também domain/, application/ e infrastructure/
     counterparties/
     wallets/
     payments/
@@ -135,13 +196,14 @@ src/
   integrations/                # Reserva; sem adaptadores financeiros
   server/                      # Apenas servidor
     config/
-    auth/
+    auth/                      # Configuração lazy, sessão e política de falhas
     authorization/
-    db/
+    db/                        # Pool local e segurança das migrations
     jobs/
     observability/
   shared/validation/
-db/migrations/                 # Reserva; sem migrations ou conexões
+db/migrations/                 # 0001 e 0002 aplicadas nos dois clusters locais
+scripts/database.mts           # Inspeção de alvo sem conexão; migrations com confirmação
 tests/{unit,integration,e2e,fixtures}/
 docs/architecture/
 ```
@@ -152,11 +214,21 @@ responsabilidades e direção de dependências.
 
 ## Limitações e próximos passos
 
-- O painel é público. Não inserir dados empresariais ou pessoais antes de implementar
-  autenticação real e autorização por organização.
-- Não há cadastro, persistência, conexão de carteiras, criação/aprovação de pagamentos,
-  assinatura, envio blockchain, comprovantes ou auditoria operacional.
-- Não há Neon, PostgreSQL, endpoints financeiros ou SDKs blockchain configurados.
+- Migrations `0001` e `0002` aplicadas nos clusters locais de desenvolvimento e
+  testes isolados. `db:target` apenas mostra configuração sanitizada. Novas
+  evoluções precisam de migrations próprias, revisão e validação isolada.
+- Sessões duram até oito horas sem renovação automática e sem cache de sessão em cookie;
+  logout usa o endpoint real do Better Auth. Remover uma sessão do banco a revoga nas
+  próximas verificações. Não há tela administrativa de revogação ou MFA.
+- Organizações implementam criar, listar e consultar com identidade da sessão,
+  filtro organizacional e RLS habilitada. O navegador não escolhe o ator. Quem
+  possuir a credencial `routepay_app` pode falsificar o contexto custom GUC;
+  a identidade precisa continuar validada no servidor pela sessão Better Auth.
+- Convites, administração de membros, transferência de propriedade, auditoria,
+  reautenticação, MFA, quotas e paginação não fazem parte desta entrega.
+- Não há conexão de carteiras, criação/aprovação de pagamentos, assinatura, envio
+  blockchain, comprovantes ou auditoria operacional.
+- Não há Neon, banco de produção, endpoints financeiros ou SDKs blockchain configurados.
 - A integração MultiHopper permanece bloqueada até comprovar stablecoins/mints
   suportados, entrega do ativo original, recuperação de fundos e segurança do deployment.
 - Os próximos módulos exigem autorização no servidor, isolamento por organização,
