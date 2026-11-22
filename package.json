@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Enterprise stablecoin payments platform built on Solana with MultiHopper integration — foundation only.",
+  "description": "Enterprise payments platform in development using Next.js, TypeScript, PostgreSQL and Better Auth.",
   "engines": {
     "node": "24.x",
     "npm": ">=11 <12"
